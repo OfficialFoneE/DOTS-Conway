@@ -37,6 +37,9 @@ public partial struct Conway : IDisposable
     public NativeArray<ulong> grid0;
     public NativeArray<ulong> grid1;
 
+    public NativeArray<ulong> CurrentGrid => (Iteration % 2 == 0) ? grid0 : grid1;
+    public NativeArray<ulong> PreviousGrid => (Iteration % 2 == 0) ? grid1 : grid0;
+
     public Conway(int resolution, Allocator allocator)
     {
         Resolution = resolution;
@@ -73,8 +76,8 @@ public partial struct Conway : IDisposable
         {
             ArrayElementWidth = ArrayElementWidth, 
             ArrayElemetCount = ArrayElemetCount,
-            BaseGrid = (Iteration % 2 == 0) ? grid0 : grid1,
-            NewGrid = (Iteration % 2 == 0) ? grid1 : grid0,
+            BaseGrid = CurrentGrid,
+            NewGrid = PreviousGrid,
         };
 
         Iteration++;
@@ -86,7 +89,7 @@ public partial struct Conway : IDisposable
     {
         StringBuilder stringBuilder = new StringBuilder(GridCellCount * 3 + 30);
 
-        var currentGrid = (Iteration % 2 == 0) ? grid0 : grid1;
+        var currentGrid = CurrentGrid;
 
         for (int y = 0; y < ArrayElementHeight; y++)
         {
@@ -112,9 +115,9 @@ public partial struct Conway : IDisposable
 
     public void DrawPreviousGrid()
     {
-        var currentGrid = (Iteration % 2 == 0) ? grid1 : grid0;
+        var previousGrid = PreviousGrid;
 
-        if (currentGrid.IsCreated == false)
+        if (previousGrid.IsCreated == false)
             return;
 
         UnityEngine.Gizmos.color = UnityEngine.Color.white;
@@ -125,7 +128,7 @@ public partial struct Conway : IDisposable
             {
                 int index = y * ArrayElementWidth + x;
 
-                var baseCells = currentGrid[index];
+                var baseCells = previousGrid[index];
 
                 for (int i = 0; i < 64; i++)
                 {
@@ -142,7 +145,7 @@ public partial struct Conway : IDisposable
 
     public void DrawCurrentGrid()
     {
-        var currentGrid = (Iteration % 2 == 0) ? grid0 : grid1;
+        var currentGrid = CurrentGrid;
 
         if (currentGrid.IsCreated == false)
             return;

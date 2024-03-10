@@ -32,7 +32,7 @@ Shader "Unlit/GridCell"
             int ArrayElementWidth;
             int ArrayElemetCount;
 
-            uniform StructuredBuffer<uint> GridCellDrawBuffer;
+            StructuredBuffer<uint> GridCellDrawBuffer;
 
             v2f vert (appdata v, uint svInstanceID : SV_InstanceID)
             {
@@ -42,8 +42,8 @@ Shader "Unlit/GridCell"
     
                 uint positionData = GridCellDrawBuffer[instanceID];
                 
-                uint x = positionData % (uint)ArrayElementWidth;
-                uint y = positionData / (uint)ArrayElementWidth;
+                uint x = positionData % ((uint)ArrayElementWidth * 64);
+                uint y = positionData / ((uint)ArrayElementWidth * 64);
                 
                 v.vertex.x += x;
                 v.vertex.y += y;

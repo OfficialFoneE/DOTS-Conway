@@ -6,12 +6,11 @@ public class Runner : MonoBehaviour
 {
     public Conway Conway;
 
-    public ComputeShader ComputeShader;
-    public Material GridCellMaterial;
+
 
     void Start()
     {
-        Conway = new Conway(5, Unity.Collections.Allocator.Persistent);
+        Conway = new Conway(2, Unity.Collections.Allocator.Persistent);
 
         CreateDraw();
 
@@ -29,7 +28,7 @@ public class Runner : MonoBehaviour
 
     private void LateUpdate()
     {
-        Draw();
+        DrawLate();
     }
 
     private void OnDrawGizmosSelected()
@@ -45,8 +44,14 @@ public class Runner : MonoBehaviour
         DrawDispose();
     }
 
+    public ComputeShader ComputeShader;
+    public Material GridCellMaterial;
+    int ComputeShaderKernel;
+    uint3 ComputeShaderThreadGroupSizes;
+
     ComputeBuffer GridCellDataBuffer;
     ComputeBuffer GridCellDrawBuffer;
+    ComputeBuffer GridCellDrawCount;
 
     RenderParams renderParams;
 
@@ -57,10 +62,11 @@ public class Runner : MonoBehaviour
     private void CreateDraw()
     {
         GridCellDataBuffer = new ComputeBuffer(Conway.ArrayElemetCount, UnsafeUtility.SizeOf<uint2>(), ComputeBufferType.Structured);
-        GridCellDrawBuffer = new ComputeBuffer(Conway.ArrayElemetCount, UnsafeUtility.SizeOf<uint2>(), ComputeBufferType.Append);
+        GridCellDrawBuffer = new ComputeBuffer(Conway.ArrayElemetCount, UnsafeUtility.SizeOf<uint>(), ComputeBufferType.Append);
+        GridCellDrawCount = new ComputeBuffer(1, UnsafeUtility.SizeOf<uint>(), ComputeBufferType.Raw);
 
         renderParams = new RenderParams(GridCellMaterial);
-        renderParams.worldBounds = new Bounds(new Vector3(10000, 10000, 10000), new Vector3(10000000, 10000000, 10000000));
+        renderParams.worldBounds = new Bounds(Vector3.zero, Vector3.one * 1000000);
 
         CommandBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
         IndirectDrawIndexedArgs[0] = new GraphicsBuffer.IndirectDrawIndexedArgs
@@ -71,26 +77,42 @@ public class Runner : MonoBehaviour
             instanceCount = 0,
             indexCountPerInstance = QuadMesh.GetIndexCount(0),
         };
+
+        ComputeShaderKernel = ComputeShader.FindKernel("CSMain");
+        ComputeShader.GetKernelThreadGroupSizes(ComputeShaderKernel, out ComputeShaderThreadGroupSizes.x, out ComputeShaderThreadGroupSizes.y, out ComputeShaderThreadGroupSizes.z);
     }
 
-    private void Draw()
+    private void DrawUpdate()
     {
-        GridCellDataBuffer.SetData(Conway.grid0);
+        GridCellDataBuffer.SetData(Conway.CurrentGrid);
         GridCellDrawBuffer.SetCounterValue(0);
 
         ComputeShader.SetInt("ArrayElementWidth", Conway.ArrayElementWidth);
-        ComputeShader.SetInt("ArrayElemetCount", Conway.ArrayElemetCount);
-        ComputeShader.SetBuffer(0, "GridCellDataBuffer", GridCellDataBuffer);
-        ComputeShader.SetBuffer(0, "GridCellDrawBuffer", GridCellDrawBuffer);
+        ComputeShader.SetInt("ArrayElementHeight", Conway.ArrayElementHeight);
+
+        var kernel = ComputeShader.FindKernel("CSMain");
+        ComputeShader.SetBuffer(kernel, "GridCellDataBuffer", GridCellDataBuffer);
+        ComputeShader.SetBuffer(kernel, "GridCellDrawBuffer", GridCellDrawBuffer);
 
         GridCellMaterial.SetInteger("ArrayElementWidth", Conway.ArrayElementWidth);
         GridCellMaterial.SetInteger("ArrayElemetCount", Conway.ArrayElemetCount);
         GridCellMaterial.SetBuffer("GridCellDrawBuffer", GridCellDrawBuffer);
 
-        ComputeShader.Dispatch(0, 8, 8, 1);
+        //int threadGroups = (int)((Conway.ArrayElemetCount + (ComputeShaderThreadGroupSizes.x - 1)) / ComputeShaderThreadGroupSizes.x);
+        //ComputeShader.Dispatch(kernel, threadGroups, 1, 1);
 
-        UnityEngine.Debug.Log($"RenderCount: {(uint)GridCellDrawBuffer.count}");
-        IndirectDrawIndexedArgs[0].instanceCount = (uint)GridCellDrawBuffer.count;
+        ComputeShader.Dispatch(kernel, Conway.ArrayElemetCount / 64, 1, 1);
+    }
+
+    private void DrawLate()
+    {
+        DrawUpdate();
+
+        ComputeBuffer.CopyCount(GridCellDrawBuffer, GridCellDrawCount, 0);
+        var data = new uint[1];
+        GridCellDrawCount.GetData(data);
+
+        IndirectDrawIndexedArgs[0].instanceCount = data[0];
         CommandBuffer.SetData(IndirectDrawIndexedArgs);
 
         Graphics.RenderMeshIndirect(renderParams, QuadMesh, CommandBuffer);
@@ -100,10 +122,12 @@ public class Runner : MonoBehaviour
     {
         GridCellDataBuffer?.Dispose();
         GridCellDrawBuffer?.Dispose();
+        GridCellDrawCount?.Dispose();
         CommandBuffer?.Dispose();
 
         GridCellDataBuffer = null;
         GridCellDrawBuffer = null;
+        GridCellDrawCount = null;
         CommandBuffer = null;
     }
 }

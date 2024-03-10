@@ -3,7 +3,7 @@
 
 
 int ArrayElementWidth;
-int ArrayElemetCount;
+int ArrayElementHeight;
 
 //float2 CameraBoundsMin;
 //float2 CameraBoundsMax;
@@ -11,22 +11,59 @@ int ArrayElemetCount;
 StructuredBuffer<uint2> GridCellDataBuffer;
 AppendStructuredBuffer<uint> GridCellDrawBuffer;
 
-[numthreads(8,8,1)]
+[numthreads(64,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    int index = id.y * ArrayElementWidth + id.x;
+    //int arrayIndex = id.y * ArrayElementWidth + id.x;
     
-    uint2 cells = GridCellDataBuffer[index];
+    uint2 cells = GridCellDataBuffer[id.x];
+    
+    uint x = id.x % (uint)ArrayElementWidth;
+    uint y = id.x / (uint)ArrayElementWidth;
+    
+    uint cellIndex = x * 64 + y * (ArrayElementWidth * 64);
     
     for (int i = 0; i < 32; i++)
     {
         if (((cells.x >> i) & 1) == 1)
-            GridCellDrawBuffer.Append(index + i);
+            GridCellDrawBuffer.Append(cellIndex + i);
     }
     
     for (int j = 0; j < 32; j++)
     {
         if (((cells.y >> j) & 1) == 1)
-            GridCellDrawBuffer.Append(index + 32 + j);
+            GridCellDrawBuffer.Append(cellIndex + 32 + j);
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //for (int y = 0; y < ArrayElementHeight; y++)
+    //{
+    //    for (int x = 0; x < ArrayElementWidth; x++)
+    //    {
+    //        int index = y * ArrayElementWidth + x;
+
+    //        var baseCells = currentGrid[index];
+
+    //        for (int i = 0; i < 64; i++)
+    //        {
+    //            bool isAlive = ((baseCells >> i) & 1) == 1;
+
+    //            if (isAlive)
+    //            {
+    //                UnityEngine.Gizmos.DrawWireCube(new
+    //                UnityEngine.Vector3(x * 64 + i, y, 0), UnityEngine.Vector3.one);
+    //            }
+    //        }
+    //    }
+    //}
 }
