@@ -1,0 +1,32 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+
+int ArrayElementWidth;
+int ArrayElemetCount;
+
+//float2 CameraBoundsMin;
+//float2 CameraBoundsMax;
+
+StructuredBuffer<uint2> GridCellDataBuffer;
+AppendStructuredBuffer<uint> GridCellDrawBuffer;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    int index = id.y * ArrayElementWidth + id.x;
+    
+    uint2 cells = GridCellDataBuffer[index];
+    
+    for (int i = 0; i < 32; i++)
+    {
+        if (((cells.x >> i) & 1) == 1)
+            GridCellDrawBuffer.Append(index + i);
+    }
+    
+    for (int j = 0; j < 32; j++)
+    {
+        if (((cells.y >> j) & 1) == 1)
+            GridCellDrawBuffer.Append(index + 32 + j);
+    }
+}
