@@ -174,6 +174,30 @@ public partial struct Conway : IDisposable
         }
     }
 
+    public int GetNumberOfAliveCells()
+    {
+        var currentGrid = CurrentGrid;
+
+        if (currentGrid.IsCreated == false)
+            return 0;
+
+        int aliveCount = 0;
+
+        for (int y = 0; y < ArrayElementHeight; y++)
+        {
+            for (int x = 0; x < ArrayElementWidth; x++)
+            {
+                int index = y * ArrayElementWidth + x;
+
+                var baseCells = currentGrid[index];
+
+                aliveCount += math.countbits(baseCells);
+            }
+        }
+
+        return aliveCount;
+    }
+
     public void Dispose()
     {
         if (grid0.IsCreated) grid0.Dispose();

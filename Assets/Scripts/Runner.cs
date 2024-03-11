@@ -10,6 +10,8 @@ public class Runner : MonoBehaviour
 
     void Start()
     {
+        Application.targetFrameRate = -1;
+
         Conway = new Conway(Resolution, Unity.Collections.Allocator.Persistent);
 
         CreateDraw();
@@ -24,25 +26,25 @@ public class Runner : MonoBehaviour
 
     private void LateUpdate()
     {
-        //DrawLate();
+        DrawLate();
     }
 
     private void OnDrawGizmosSelected()
     {
-        Conway.DrawPreviousGrid();
-        Conway.DrawCurrentGrid();
+        //Conway.DrawPreviousGrid();
+        //Conway.DrawCurrentGrid();
 
-        for (int i = 0; i < Conway.ArrayElementWidth; i++)
-        {
-            for (int j = 0; j < Conway.ArrayElementHeight; j++)
-            {
-                var startingX = i * 64;
-                var startingY = j;
+        //for (int i = 0; i < Conway.ArrayElementWidth; i++)
+        //{
+        //    for (int j = 0; j < Conway.ArrayElementHeight; j++)
+        //    {
+        //        var startingX = i * 64;
+        //        var startingY = j;
 
 
-                Gizmos.DrawWireCube(new Vector3(startingX + 32 - 0.5f, startingY), new Vector3(64, 1.0f));
-            }
-        }
+        //        Gizmos.DrawWireCube(new Vector3(startingX + 32 - 0.5f, startingY), new Vector3(64, 1.0f));
+        //    }
+        //}
     }
 
     private void OnDestroy()
@@ -70,7 +72,7 @@ public class Runner : MonoBehaviour
     private void CreateDraw()
     {
         GridCellDataBuffer = new ComputeBuffer(Conway.ArrayElemetCount, UnsafeUtility.SizeOf<uint2>(), ComputeBufferType.Structured);
-        GridCellDrawBuffer = new ComputeBuffer(Conway.ArrayElemetCount, UnsafeUtility.SizeOf<uint>(), ComputeBufferType.Append);
+        GridCellDrawBuffer = new ComputeBuffer(Conway.ArrayElemetCount * 64, UnsafeUtility.SizeOf<uint>(), ComputeBufferType.Append);
         GridCellDrawCount = new ComputeBuffer(1, UnsafeUtility.SizeOf<uint>(), ComputeBufferType.Raw);
 
         renderParams = new RenderParams(GridCellMaterial);
@@ -121,6 +123,9 @@ public class Runner : MonoBehaviour
         GridCellDrawCount.GetData(data);
 
         IndirectDrawIndexedArgs[0].instanceCount = data[0];
+
+        //UnityEngine.Debug.Log($"Alive cell count: {Conway.GetNumberOfAliveCells()}, GPU: {data[0]}");
+
         CommandBuffer.SetData(IndirectDrawIndexedArgs);
 
         Graphics.RenderMeshIndirect(renderParams, QuadMesh, CommandBuffer);

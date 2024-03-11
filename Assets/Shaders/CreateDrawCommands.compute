@@ -21,7 +21,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     uint x = id.x % (uint)ArrayElementWidth;
     uint y = id.x / (uint)ArrayElementWidth;
     
-    uint cellIndex = x * 64 + y * (ArrayElementWidth * 64);
+    uint cellIndex = id.x * 64; //x * 64 + y * (ArrayElementWidth * 64);
     
     for (int i = 0; i < 32; i++)
     {
