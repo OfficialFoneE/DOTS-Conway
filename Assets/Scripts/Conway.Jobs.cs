@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -10,6 +11,7 @@ public partial struct Conway
     public struct UpdateGridJob : IJobParallelFor
     {
         public int ArrayElementWidth;
+        public int ArrayElementHeight;
         public int ArrayElemetCount;
 
         const ulong EndingBit = (1UL << 63);
@@ -24,6 +26,14 @@ public partial struct Conway
 
             ulong baseCells = BaseGrid[index];
 
+            int x = index % ArrayElementWidth;
+            int y = index / ArrayElementWidth;
+
+            bool isLeft = x - 1 < ArrayElementWidth;
+            bool isRight = x + 1 >= 0;
+            bool isTop = y + 1 < ArrayElementHeight;
+            bool isBottom = y - 1 >= 0;
+
             var topIndex = index + ArrayElementWidth;
             var bottomIndex = index - ArrayElementWidth;
             var leftIndex = index - 1;
@@ -34,45 +44,43 @@ public partial struct Conway
             var leftBottomIndex = bottomIndex - 1;
             var rightBottomIndex = bottomIndex + 1;
 
+            neighborCounts[0] += GetBitValue(baseCells, 1);
+
             // If there are cells to the left of this chunk.
-            if (leftIndex >= 0)
+            if (isLeft)
             {
-                ulong left = BaseGrid[leftIndex];
-                neighborCounts[0] = (left & BeginningBit) == BeginningBit ? (byte)1 : (byte)0;
+                neighborCounts[0] += GetBitValue(BaseGrid[leftIndex], 63);
 
                 // If there are cells to the bottom left of this chunk
-                if (leftBottomIndex >= 0)
+                if (isBottom)
                 {
-                    ulong leftBottom = BaseGrid[leftBottomIndex];
-                    neighborCounts[0] += (leftBottom & BeginningBit) == BeginningBit ? (byte)1 : (byte)0;
+                    neighborCounts[0] += GetBitValue(BaseGrid[leftBottomIndex], 63);
                 }
 
                 // If there are cells to the top left of this chunk
-                if (leftTopIndex < ArrayElemetCount)
+                if (isTop)
                 {
-                    ulong leftTop = BaseGrid[leftTopIndex];
-                    neighborCounts[0] += (leftTop & BeginningBit) == BeginningBit ? (byte)1 : (byte)0;
+                    neighborCounts[0] += GetBitValue(BaseGrid[leftTopIndex], 63);
                 }
             }
 
+            neighborCounts[63] += GetBitValue(baseCells, 62);
+
             // If there are cells to the right of this chunk.
-            if (rightIndex < ArrayElemetCount)
+            if (isRight)
             {
-                ulong right = BaseGrid[rightIndex];
-                neighborCounts[63] = (right & EndingBit) == EndingBit ? (byte)1 : (byte)0;
+                neighborCounts[63] += GetBitValue(BaseGrid[rightIndex], 0);
 
                 // If there are cells to the bottom right of this chunk
-                if (rightBottomIndex >= 0)
+                if (isBottom)
                 {
-                    ulong rightBottom = BaseGrid[rightBottomIndex];
-                    neighborCounts[63] += (rightBottom & EndingBit) == EndingBit ? (byte)1 : (byte)0;
+                    neighborCounts[63] += GetBitValue(BaseGrid[rightBottomIndex], 0);
                 }
 
                 // If there are cells to the top right of this chunk
-                if (rightTopIndex < ArrayElemetCount)
+                if (isTop)
                 {
-                    ulong rightTop = BaseGrid[rightTopIndex];
-                    neighborCounts[63] += (rightTop & EndingBit) == EndingBit ? (byte)1 : (byte)0;
+                    neighborCounts[63] += GetBitValue(BaseGrid[rightTopIndex], 0);
                 }
             }
 
@@ -80,27 +88,31 @@ public partial struct Conway
             {
                 for (int i = 1; i < 64 - 1; i += 2)
                 {
-                    bool isCenterEnabled = ((baseCells >> i) & 1) == 1;
+                    bool isCenterEnabled = IsBitEnabled(baseCells, i);
+                    bool isLeftEnabled = IsBitEnabled(baseCells, i - 1);
+                    bool isRightEnabled = IsBitEnabled(baseCells, i + 1);
 
                     neighborCounts[i - 1] += isCenterEnabled ? (byte)1 : (byte)0;
                     neighborCounts[i + 1] += isCenterEnabled ? (byte)1 : (byte)0;
-
-                    bool isLeftEnabled = ((baseCells >> (i - 1)) & 1) == 1;
-                    bool isRightEnabled = ((baseCells >> (i + 1)) & 1) == 1;
                     neighborCounts[i] += isLeftEnabled ? (byte)1 : (byte)0;
                     neighborCounts[i] += isRightEnabled ? (byte)1 : (byte)0;
                 }
             }
 
-            if (topIndex < ArrayElemetCount)
+            if (isTop)
             {
                 ulong top = BaseGrid[topIndex];
 
+                neighborCounts[0] += GetBitValue(top, 1);
+                neighborCounts[63] += GetBitValue(top, 62);
+
+                // The direct top.
                 for (int i = 0; i < 64; i++)
                 {
                     neighborCounts[i] += ((top >> i) & 1) == 1 ? (byte)1 : (byte)0;
                 }
 
+                // The diagonals.
                 for (int i = 1; i < 64 - 1; i++)
                 {
                     neighborCounts[i] += ((top >> (i - 1)) & 1) == 1 ? (byte)1 : (byte)0;
@@ -108,9 +120,12 @@ public partial struct Conway
                 }
             }
 
-            if (bottomIndex >= 0)
+            if (isBottom)
             {
                 ulong bottom = BaseGrid[bottomIndex];
+
+                neighborCounts[0] += GetBitValue(bottom, 1);
+                neighborCounts[63] += GetBitValue(bottom, 62);
 
                 for (int i = 0; i < 64; i++)
                 {
@@ -128,7 +143,7 @@ public partial struct Conway
 
             for (int i = 0; i < 64; i++)
             {
-                bool isCellAlive = ((baseCells >> i) & 1) == 1;
+                bool isCellAlive = IsBitEnabled(baseCells, i);
 
                 if (isCellAlive)
                 {
@@ -163,6 +178,18 @@ public partial struct Conway
 
             // Maybe we do 64 x 64 chunks.
             // Than calculate the alive for the bounding chunks?
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsBitEnabled(ulong value, int index)
+        {
+            return ((value >> index) & 1) == 1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte GetBitValue(ulong value, int index)
+        {
+            return IsBitEnabled(value, index) ? (byte)1 : (byte)0;
         }
     }
 

@@ -148,6 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71d7c0a4603ea4048992bb5262931801, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Resolution: 4
   ComputeShader: {fileID: 7200000, guid: 2883a699554d4a14cb73ddfaebc6e246, type: 3}
   GridCellMaterial: {fileID: 2100000, guid: bacdd05b0d863d04ba2da34541789dfe, type: 2}
   QuadMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}

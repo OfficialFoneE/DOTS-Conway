@@ -75,6 +75,7 @@ public partial struct Conway : IDisposable
         var updateGridJob = new UpdateGridJob
         {
             ArrayElementWidth = ArrayElementWidth, 
+            ArrayElementHeight = ArrayElementHeight,
             ArrayElemetCount = ArrayElemetCount,
             BaseGrid = CurrentGrid,
             NewGrid = PreviousGrid,

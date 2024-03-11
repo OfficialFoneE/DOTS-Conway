@@ -4,37 +4,45 @@ using UnityEngine;
 
 public class Runner : MonoBehaviour
 {
-    public Conway Conway;
+    public int Resolution = 2;
 
-
+    private Conway Conway;
 
     void Start()
     {
-        Conway = new Conway(2, Unity.Collections.Allocator.Persistent);
+        Conway = new Conway(Resolution, Unity.Collections.Allocator.Persistent);
 
         CreateDraw();
 
         UnityEngine.Debug.Log(Conway.ToString());
-
-        //UnityEngine.Debug.Log(Conway.PrintGrid());
     }
 
     void Update()
     {
         Conway.Update();
-
-        //Debug.Break();
     }
 
     private void LateUpdate()
     {
-        DrawLate();
+        //DrawLate();
     }
 
     private void OnDrawGizmosSelected()
     {
         Conway.DrawPreviousGrid();
         Conway.DrawCurrentGrid();
+
+        for (int i = 0; i < Conway.ArrayElementWidth; i++)
+        {
+            for (int j = 0; j < Conway.ArrayElementHeight; j++)
+            {
+                var startingX = i * 64;
+                var startingY = j;
+
+
+                Gizmos.DrawWireCube(new Vector3(startingX + 32 - 0.5f, startingY), new Vector3(64, 1.0f));
+            }
+        }
     }
 
     private void OnDestroy()
