@@ -386,7 +386,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollMultipler: 10000
   minimumOrthographicSize: 30
-  maximumOrthographicSize: 600
+  maximumOrthographicSize: 1000
   smoothMultipler: 20
 --- !u!114 &519420034
 MonoBehaviour:

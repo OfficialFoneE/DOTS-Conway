@@ -552,7 +552,7 @@ public partial struct Conway
 
             for (int i = 0; i < 64; i++)
             {
-                bool isAlive = noise.snoise(new float2(x * 64 + i, y)) > 0.2f;
+                bool isAlive = noise.snoise(new float2(x * 64 + i, y)) > 0.4f;
 
                 results |= (isAlive ? 1UL : 0UL) << i;
             }
