@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Unity.Burst;
+using Unity.Burst.CompilerServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -34,9 +35,9 @@ public partial struct Conway
                 int arrayIndex = startIndex + index;
 
 
-                int cellIndex = GetMortonIndex(x, y);
+                int mortonIndex = GetMortonIndex(x, y);
 
-                ulong baseCells = BaseGrid[cellIndex];
+                ulong baseCells = BaseGrid[mortonIndex];
 
                 bool isLeft = x - 1 >= 0;
                 bool isRight = x + 1 < ArrayElementWidth;
@@ -56,16 +57,17 @@ public partial struct Conway
                 neighborCounts[0] += GetBitValue(baseCells, 1);
 
                 // If there are cells to the left of this chunk.
+
                 if (isLeft)
                 {
-                    var leftIndex = GetMortonIndex(x - 1, y);
+                    var leftIndex = GetMortonLeft(mortonIndex);
 
                     neighborCounts[0] += GetBitValue(BaseGrid[leftIndex], 63);
 
                     // If there are cells to the bottom left of this chunk
                     if (isBottom)
                     {
-                        var leftBottomIndex = GetMortonIndex(x - 1, y - 1);
+                        var leftBottomIndex = GetMortonBottom(leftIndex);
 
                         neighborCounts[0] += GetBitValue(BaseGrid[leftBottomIndex], 63);
                     }
@@ -73,7 +75,7 @@ public partial struct Conway
                     // If there are cells to the top left of this chunk
                     if (isTop)
                     {
-                        var leftTopIndex = GetMortonIndex(x - 1, y + 1);
+                        var leftTopIndex = GetMortonTop(leftIndex);
 
                         neighborCounts[0] += GetBitValue(BaseGrid[leftTopIndex], 63);
                     }
@@ -84,14 +86,14 @@ public partial struct Conway
                 // If there are cells to the right of this chunk.
                 if (isRight)
                 {
-                    var rightIndex = GetMortonIndex(x + 1, y);
+                    var rightIndex = GetMortonRight(mortonIndex);
 
                     neighborCounts[63] += GetBitValue(BaseGrid[rightIndex], 0);
 
                     // If there are cells to the bottom right of this chunk
                     if (isBottom)
                     {
-                        var rightBottomIndex = GetMortonIndex(x + 1, y - 1);
+                        var rightBottomIndex = GetMortonBottom(rightIndex);
 
                         neighborCounts[63] += GetBitValue(BaseGrid[rightBottomIndex], 0);
                     }
@@ -99,7 +101,7 @@ public partial struct Conway
                     // If there are cells to the top right of this chunk
                     if (isTop)
                     {
-                        var rightTopIndex = GetMortonIndex(x + 1, y + 1);
+                        var rightTopIndex = GetMortonTop(rightIndex);
 
                         neighborCounts[63] += GetBitValue(BaseGrid[rightTopIndex], 0);
                     }
@@ -122,7 +124,7 @@ public partial struct Conway
 
                 if (isTop)
                 {
-                    var topIndex = GetMortonIndex(x, y + 1);
+                    var topIndex = GetMortonTop(mortonIndex);
 
                     ulong top = BaseGrid[topIndex];
 
@@ -145,7 +147,7 @@ public partial struct Conway
 
                 if (isBottom)
                 {
-                    var bottomIndex = GetMortonIndex(x, y - 1);
+                    var bottomIndex = GetMortonBottom(mortonIndex);
 
                     ulong bottom = BaseGrid[bottomIndex];
 
@@ -184,7 +186,7 @@ public partial struct Conway
                     }
                 }
 
-                NewGrid[cellIndex] = results;
+                NewGrid[mortonIndex] = results;
 
                 x++;
                 if (x >= ArrayElementWidth)
@@ -195,6 +197,30 @@ public partial struct Conway
 
                 UnsafeUtility.MemClear(neighborCounts, UnsafeUtility.SizeOf<byte>() * 64);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetMortonTop(int index)
+        {
+            return (((index & 0b10101010) - 1) &0b10101010) | (index & 0b01010101);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetMortonBottom(int index)
+        {
+            return (((index | 0b01010101) + 1) & 0b10101010) | (index & 0b01010101);
+
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetMortonLeft(int index)
+        {
+            return (((index & 0b01010101) - 1) &0b01010101) | (index & 0b10101010);
+
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetMortonRight(int index)
+        {
+            return (((index | 0b10101010) + 1) & 0b01010101) | (index & 0b10101010);
+
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
