@@ -12,15 +12,15 @@ public class Runner : MonoBehaviour
         Application.targetFrameRate = -1;
 
         Conway = new Conway(Resolution, Unity.Collections.Allocator.Persistent);
-        ConwayRenderer = new ConwayRenderer(Conway);
+        //ConwayRenderer = new ConwayRenderer(Conway);
 
         UnityEngine.Debug.Log(Conway.ToString());
     }
 
     void Update()
     {
-        ConwayRenderer.Draw2(Conway);
-        ConwayRenderer.Dispatch2(Conway);
+        //ConwayRenderer.Draw2(Conway);
+        //ConwayRenderer.Dispatch2(Conway);
         Conway.Update();
     }
 

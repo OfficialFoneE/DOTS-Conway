@@ -15,6 +15,8 @@ public partial struct Conway
         public int ArrayElemetCount;
 
         [ReadOnly] public NativeArray<ulong> BaseGrid;
+        [NativeDisableParallelForRestriction]
+        [NoAlias]
         [WriteOnly] public NativeArray<ulong> NewGrid;
 
         public unsafe void Execute(int startIndex, int count)
@@ -29,41 +31,50 @@ public partial struct Conway
 
             for (int index = 0; index < count; index++)
             {
-                int currentIndex = startIndex + index;
+                int arrayIndex = startIndex + index;
 
-                ulong baseCells = BaseGrid[currentIndex];
+
+                int cellIndex = GetMortonIndex(x, y);
+
+                ulong baseCells = BaseGrid[cellIndex];
 
                 bool isLeft = x - 1 >= 0;
                 bool isRight = x + 1 < ArrayElementWidth;
                 bool isTop = y + 1 < ArrayElementHeight;
                 bool isBottom = y - 1 >= 0;
 
-                var topIndex = currentIndex + ArrayElementWidth;
-                var bottomIndex = currentIndex - ArrayElementWidth;
-                var leftIndex = currentIndex - 1;
-                var rightIndex = currentIndex + 1;
+                //var topIndex = currentIndex + ArrayElementWidth;
+                //var bottomIndex = currentIndex - ArrayElementWidth;
+                //var leftIndex = currentIndex - 1;
+                //var rightIndex = currentIndex + 1;
 
-                var leftTopIndex = topIndex - 1;
-                var rightTopIndex = topIndex + 1;
-                var leftBottomIndex = bottomIndex - 1;
-                var rightBottomIndex = bottomIndex + 1;
+                //var leftTopIndex = topIndex - 1;
+                //var rightTopIndex = topIndex + 1;
+                //var leftBottomIndex = bottomIndex - 1;
+                //var rightBottomIndex = bottomIndex + 1;
 
                 neighborCounts[0] += GetBitValue(baseCells, 1);
 
                 // If there are cells to the left of this chunk.
                 if (isLeft)
                 {
+                    var leftIndex = GetMortonIndex(x - 1, y);
+
                     neighborCounts[0] += GetBitValue(BaseGrid[leftIndex], 63);
 
                     // If there are cells to the bottom left of this chunk
                     if (isBottom)
                     {
+                        var leftBottomIndex = GetMortonIndex(x - 1, y - 1);
+
                         neighborCounts[0] += GetBitValue(BaseGrid[leftBottomIndex], 63);
                     }
 
                     // If there are cells to the top left of this chunk
                     if (isTop)
                     {
+                        var leftTopIndex = GetMortonIndex(x - 1, y + 1);
+
                         neighborCounts[0] += GetBitValue(BaseGrid[leftTopIndex], 63);
                     }
                 }
@@ -73,17 +84,23 @@ public partial struct Conway
                 // If there are cells to the right of this chunk.
                 if (isRight)
                 {
+                    var rightIndex = GetMortonIndex(x + 1, y);
+
                     neighborCounts[63] += GetBitValue(BaseGrid[rightIndex], 0);
 
                     // If there are cells to the bottom right of this chunk
                     if (isBottom)
                     {
+                        var rightBottomIndex = GetMortonIndex(x + 1, y - 1);
+
                         neighborCounts[63] += GetBitValue(BaseGrid[rightBottomIndex], 0);
                     }
 
                     // If there are cells to the top right of this chunk
                     if (isTop)
                     {
+                        var rightTopIndex = GetMortonIndex(x + 1, y + 1);
+
                         neighborCounts[63] += GetBitValue(BaseGrid[rightTopIndex], 0);
                     }
                 }
@@ -105,6 +122,8 @@ public partial struct Conway
 
                 if (isTop)
                 {
+                    var topIndex = GetMortonIndex(x, y + 1);
+
                     ulong top = BaseGrid[topIndex];
 
                     neighborCounts[0] += GetBitValue(top, 1);
@@ -126,6 +145,8 @@ public partial struct Conway
 
                 if (isBottom)
                 {
+                    var bottomIndex = GetMortonIndex(x, y - 1);
+
                     ulong bottom = BaseGrid[bottomIndex];
 
                     neighborCounts[0] += GetBitValue(bottom, 1);
@@ -163,7 +184,7 @@ public partial struct Conway
                     }
                 }
 
-                NewGrid[currentIndex] = results;
+                NewGrid[cellIndex] = results;
 
                 x++;
                 if (x >= ArrayElementWidth)
@@ -176,164 +197,29 @@ public partial struct Conway
             }
         }
 
-        public unsafe void Execute(int index)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetMortonIndex(int x, int y)
         {
-            var neighborCounts = stackalloc byte[64];
+            return SwizzleBitsFast(x, y);
+        }
 
-            ulong baseCells = BaseGrid[index];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int SwizzleBitsFast(int x, int y)
+        {
+            int xx = x;
+            int yy = y;
 
-            int x = index % ArrayElementWidth;
-            int y = index / ArrayElementWidth;
+            xx = (xx | (xx << 8)) & 0x00FF00FF;
+            xx = (xx | (xx << 4)) & 0x0F0F0F0F;
+            xx = (xx | (xx << 2)) & 0x33333333;
+            xx = (xx | (xx << 1)) & 0x55555555;
 
-            bool isLeft = x - 1 >= 0;
-            bool isRight = x + 1 < ArrayElementWidth;
-            bool isTop = y + 1 < ArrayElementHeight;
-            bool isBottom = y - 1 >= 0;
+            yy = (yy | (yy << 8)) & 0x00FF00FF;
+            yy = (yy | (yy << 4)) & 0x0F0F0F0F;
+            yy = (yy | (yy << 2)) & 0x33333333;
+            yy = (yy | (yy << 1)) & 0x55555555;
 
-            var topIndex = index + ArrayElementWidth;
-            var bottomIndex = index - ArrayElementWidth;
-            var leftIndex = index - 1;
-            var rightIndex = index + 1;
-
-            var leftTopIndex = topIndex - 1;
-            var rightTopIndex = topIndex + 1;
-            var leftBottomIndex = bottomIndex - 1;
-            var rightBottomIndex = bottomIndex + 1;
-
-            neighborCounts[0] += GetBitValue(baseCells, 1);
-
-            // If there are cells to the left of this chunk.
-            if (isLeft)
-            {
-                neighborCounts[0] += GetBitValue(BaseGrid[leftIndex], 63);
-
-                // If there are cells to the bottom left of this chunk
-                if (isBottom)
-                {
-                    neighborCounts[0] += GetBitValue(BaseGrid[leftBottomIndex], 63);
-                }
-
-                // If there are cells to the top left of this chunk
-                if (isTop)
-                {
-                    neighborCounts[0] += GetBitValue(BaseGrid[leftTopIndex], 63);
-                }
-            }
-
-            neighborCounts[63] += GetBitValue(baseCells, 62);
-
-            // If there are cells to the right of this chunk.
-            if (isRight)
-            {
-                neighborCounts[63] += GetBitValue(BaseGrid[rightIndex], 0);
-
-                // If there are cells to the bottom right of this chunk
-                if (isBottom)
-                {
-                    neighborCounts[63] += GetBitValue(BaseGrid[rightBottomIndex], 0);
-                }
-
-                // If there are cells to the top right of this chunk
-                if (isTop)
-                {
-                    neighborCounts[63] += GetBitValue(BaseGrid[rightTopIndex], 0);
-                }
-            }
-
-            // Left and right internal.
-            {
-                for (int i = 1; i < 64 - 1; i += 2)
-                {
-                    bool isCenterEnabled = IsBitEnabled(baseCells, i);
-                    bool isLeftEnabled = IsBitEnabled(baseCells, i - 1);
-                    bool isRightEnabled = IsBitEnabled(baseCells, i + 1);
-
-                    neighborCounts[i - 1] += isCenterEnabled ? (byte)1 : (byte)0;
-                    neighborCounts[i + 1] += isCenterEnabled ? (byte)1 : (byte)0;
-                    neighborCounts[i] += isLeftEnabled ? (byte)1 : (byte)0;
-                    neighborCounts[i] += isRightEnabled ? (byte)1 : (byte)0;
-                }
-            }
-
-            if (isTop)
-            {
-                ulong top = BaseGrid[topIndex];
-
-                neighborCounts[0] += GetBitValue(top, 1);
-                neighborCounts[63] += GetBitValue(top, 62);
-
-                // The direct top.
-                for (int i = 0; i < 64; i++)
-                {
-                    neighborCounts[i] += ((top >> i) & 1) == 1 ? (byte)1 : (byte)0;
-                }
-
-                // The diagonals.
-                for (int i = 1; i < 64 - 1; i++)
-                {
-                    neighborCounts[i] += ((top >> (i - 1)) & 1) == 1 ? (byte)1 : (byte)0;
-                    neighborCounts[i] += ((top >> (i + 1)) & 1) == 1 ? (byte)1 : (byte)0;
-                }
-            }
-
-            if (isBottom)
-            {
-                ulong bottom = BaseGrid[bottomIndex];
-
-                neighborCounts[0] += GetBitValue(bottom, 1);
-                neighborCounts[63] += GetBitValue(bottom, 62);
-
-                for (int i = 0; i < 64; i++)
-                {
-                    neighborCounts[i] += ((bottom >> i) & 1) == 1 ? (byte)1 : (byte)0;
-                }
-
-                for (int i = 1; i < 64 - 1; i++)
-                {
-                    neighborCounts[i] += ((bottom >> (i - 1)) & 1) == 1 ? (byte)1 : (byte)0;
-                    neighborCounts[i] += ((bottom >> (i + 1)) & 1) == 1 ? (byte)1 : (byte)0;
-                }
-            }
-
-            ulong results = 0;
-
-            for (int i = 0; i < 64; i++)
-            {
-                bool isCellAlive = IsBitEnabled(baseCells, i);
-
-                if (isCellAlive)
-                {
-                    bool isAlive = neighborCounts[i] == 2 | neighborCounts[i] == 3;
-
-                    results |= (isAlive ? 1UL : 0UL) << i;
-                }
-                else
-                {
-                    bool isAlive = neighborCounts[i] == 3;
-
-                    results |= (isAlive ? 1UL : 0UL) << i;
-                }
-            }
-
-            NewGrid[index] = results;
-
-            //v128 top = new v128();
-            //v128 bottom = new v128();
-            //v128 center = new v128();
-            //v128 left = new v128();
-            //v128 right = new v128();
-
-            //tmp = (input ^ (input >> 8)) & 0x0000ff00;
-            //input ^= (tmp ^ (tmp << 8));
-            //tmp = (input ^ (input >> 4)) & 0x00f000f0;
-            //input ^= (tmp ^ (tmp << 4));
-            //tmp = (input ^ (input >> 2)) & 0x0c0c0c0c;
-            //input ^= (tmp ^ (tmp << 2));
-            //tmp = (input ^ (input >> 1)) & 0x22222222;
-            //input ^= (tmp ^ (tmp << 1));
-
-            // Maybe we do 64 x 64 chunks.
-            // Than calculate the alive for the bounding chunks?
+            return xx | (yy << 1);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

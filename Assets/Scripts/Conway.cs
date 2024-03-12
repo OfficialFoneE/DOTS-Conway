@@ -53,8 +53,8 @@ public partial struct Conway : IDisposable
 
         Iteration = 0;
 
-        grid0 = new NativeArray<ulong>(ArrayElemetCount, allocator);
-        grid1 = new NativeArray<ulong>(ArrayElemetCount, allocator);
+        grid0 = new NativeArray<ulong>(/*ArrayElemetCount*/ArrayElementHeight * ArrayElementHeight, allocator);
+        grid1 = new NativeArray<ulong>(/*ArrayElemetCount*/ArrayElementHeight * ArrayElementHeight, allocator);
 
         RandomGrid();
     }
