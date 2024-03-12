@@ -58,14 +58,14 @@ public partial struct Conway
 
                 // If there are cells to the left of this chunk.
 
-                if (isLeft)
+                if (Hint.Likely(isLeft))
                 {
                     var leftIndex = GetMortonLeft(mortonIndex);
 
                     neighborCounts[0] += GetBitValue(BaseGrid[leftIndex], 63);
 
                     // If there are cells to the bottom left of this chunk
-                    if (isBottom)
+                    if (Hint.Likely(isBottom))
                     {
                         var leftBottomIndex = GetMortonBottom(leftIndex);
 
@@ -73,7 +73,7 @@ public partial struct Conway
                     }
 
                     // If there are cells to the top left of this chunk
-                    if (isTop)
+                    if (Hint.Likely(isTop))
                     {
                         var leftTopIndex = GetMortonTop(leftIndex);
 
@@ -84,14 +84,14 @@ public partial struct Conway
                 neighborCounts[63] += GetBitValue(baseCells, 62);
 
                 // If there are cells to the right of this chunk.
-                if (isRight)
+                if (Hint.Likely(isRight))
                 {
                     var rightIndex = GetMortonRight(mortonIndex);
 
                     neighborCounts[63] += GetBitValue(BaseGrid[rightIndex], 0);
 
                     // If there are cells to the bottom right of this chunk
-                    if (isBottom)
+                    if (Hint.Likely(isBottom))
                     {
                         var rightBottomIndex = GetMortonBottom(rightIndex);
 
@@ -99,7 +99,7 @@ public partial struct Conway
                     }
 
                     // If there are cells to the top right of this chunk
-                    if (isTop)
+                    if (Hint.Likely(isTop))
                     {
                         var rightTopIndex = GetMortonTop(rightIndex);
 
@@ -122,7 +122,7 @@ public partial struct Conway
                     }
                 }
 
-                if (isTop)
+                if (Hint.Likely(isTop))
                 {
                     var topIndex = GetMortonTop(mortonIndex);
 
@@ -145,7 +145,7 @@ public partial struct Conway
                     }
                 }
 
-                if (isBottom)
+                if (Hint.Likely(isBottom))
                 {
                     var bottomIndex = GetMortonBottom(mortonIndex);
 
