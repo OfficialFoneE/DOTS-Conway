@@ -72,9 +72,9 @@ public partial struct Conway : IDisposable
 
     public void Update()
     {
-        var updateGridJob = new UpdateGridJob
+        var UpdateGridJobBatch = new UpdateGridJobBatch
         {
-            ArrayElementWidth = ArrayElementWidth, 
+            ArrayElementWidth = ArrayElementWidth,
             ArrayElementHeight = ArrayElementHeight,
             ArrayElemetCount = ArrayElemetCount,
             BaseGrid = CurrentGrid,
@@ -83,7 +83,20 @@ public partial struct Conway : IDisposable
 
         Iteration++;
 
-        updateGridJob.Schedule(ArrayElemetCount, 4).Complete();
+        UpdateGridJobBatch.ScheduleBatch(ArrayElemetCount, 32).Complete();
+
+        //var updateGridJob = new UpdateGridJob
+        //{
+        //    ArrayElementWidth = ArrayElementWidth, 
+        //    ArrayElementHeight = ArrayElementHeight,
+        //    ArrayElemetCount = ArrayElemetCount,
+        //    BaseGrid = CurrentGrid,
+        //    NewGrid = PreviousGrid,
+        //};
+
+        //Iteration++;
+
+        //updateGridJob.Schedule(ArrayElemetCount, 4).Complete();
     }
 
     public string PrintGrid()
