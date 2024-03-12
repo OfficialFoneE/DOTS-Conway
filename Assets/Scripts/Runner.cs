@@ -19,12 +19,14 @@ public class Runner : MonoBehaviour
 
     void Update()
     {
+        ConwayRenderer.Draw2(Conway);
+        ConwayRenderer.Dispatch2(Conway);
         Conway.Update();
     }
 
     private void LateUpdate()
     {
-        ConwayRenderer.Draw(Conway);
+        //ConwayRenderer.Draw(Conway);
     }
 
     private void OnDrawGizmosSelected()

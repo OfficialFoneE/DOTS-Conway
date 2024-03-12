@@ -5,65 +5,154 @@
 int ArrayElementWidth;
 int ArrayElementHeight;
 
-//float2 CameraBoundsMin;
-//float2 CameraBoundsMax;
+float CellSize;
+float2 CameraBoundsMin;
+float2 CameraBoundsMax;
 
 StructuredBuffer<uint2> GridCellDataBuffer;
 AppendStructuredBuffer<uint> GridCellDrawBuffer;
 
-[numthreads(64,1,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+[numthreads(64, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
 {
-    //int arrayIndex = id.y * ArrayElementWidth + id.x;
-    
     uint2 cells = GridCellDataBuffer[id.x];
     
     uint x = id.x % (uint)ArrayElementWidth;
     uint y = id.x / (uint)ArrayElementWidth;
     
-    uint cellIndex = id.x * 64; //x * 64 + y * (ArrayElementWidth * 64);
+    uint cellIndex = id.x * 64;
     
-    for (int i = 0; i < 32; i++)
-    {
-        if (((cells.x >> i) & 1) == 1)
-            GridCellDrawBuffer.Append(cellIndex + i);
-    }
-    
-    for (int j = 0; j < 32; j++)
-    {
-        if (((cells.y >> j) & 1) == 1)
-            GridCellDrawBuffer.Append(cellIndex + 32 + j);
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    //for (int y = 0; y < ArrayElementHeight; y++)
+    float2 chunkMinimum = float2(x * 64 * CellSize, y * CellSize);
+    float2 chunkMaximum = chunkMinimum + float2(64 * CellSize, CellSize);
+
+    //if (all(CameraBoundsMax >= chunkMinimum & CameraBoundsMin <= chunkMaximum))
     //{
-    //    for (int x = 0; x < ArrayElementWidth; x++)
-    //    {
-    //        int index = y * ArrayElementWidth + x;
+        if (cells.x != 0)
+        {
+            if (((cells.x >> 0) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 0);
+            if (((cells.x >> 1) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 1);
+            if (((cells.x >> 2) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 2);
+            if (((cells.x >> 3) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 3);
+            if (((cells.x >> 4) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 4);
+            if (((cells.x >> 5) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 5);
+            if (((cells.x >> 6) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 6);
+            if (((cells.x >> 7) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 7);
+            if (((cells.x >> 8) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 8);
+            if (((cells.x >> 9) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 9);
+            if (((cells.x >> 10) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 10);
+            if (((cells.x >> 11) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 11);
+            if (((cells.x >> 12) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 12);
+            if (((cells.x >> 13) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 13);
+            if (((cells.x >> 14) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 14);
+            if (((cells.x >> 15) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 15);
+            if (((cells.x >> 16) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 16);
+            if (((cells.x >> 17) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 17);
+            if (((cells.x >> 18) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 18);
+            if (((cells.x >> 19) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 19);
+            if (((cells.x >> 20) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 20);
+            if (((cells.x >> 21) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 21);
+            if (((cells.x >> 22) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 22);
+            if (((cells.x >> 23) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 23);
+            if (((cells.x >> 24) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 24);
+            if (((cells.x >> 25) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 25);
+            if (((cells.x >> 26) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 26);
+            if (((cells.x >> 27) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 27);
+            if (((cells.x >> 28) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 28);
+            if (((cells.x >> 29) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 29);
+            if (((cells.x >> 30) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 30);
+            if (((cells.x >> 31) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 31);
 
-    //        var baseCells = currentGrid[index];
-
-    //        for (int i = 0; i < 64; i++)
-    //        {
-    //            bool isAlive = ((baseCells >> i) & 1) == 1;
-
-    //            if (isAlive)
-    //            {
-    //                UnityEngine.Gizmos.DrawWireCube(new
-    //                UnityEngine.Vector3(x * 64 + i, y, 0), UnityEngine.Vector3.one);
-    //            }
-    //        }
-    //    }
+            //for (int i = 0; i < 32; i++)
+            //{
+            //    if (((cells.x >> i) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + i);
+            //}
+        }
+    
+        cellIndex += 32;
+        
+        if (cells.y != 0)
+        {
+            if (((cells.y >> 0) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 0);
+            if (((cells.y >> 1) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 1);
+            if (((cells.y >> 2) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 2);
+            if (((cells.y >> 3) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 3);
+            if (((cells.y >> 4) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 4);
+            if (((cells.y >> 5) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 5);
+            if (((cells.y >> 6) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 6);
+            if (((cells.y >> 7) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 7);
+            if (((cells.y >> 8) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 8);
+            if (((cells.y >> 9) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 9);
+            if (((cells.y >> 10) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 10);
+            if (((cells.y >> 11) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 11);
+            if (((cells.y >> 12) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 12);
+            if (((cells.y >> 13) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 13);
+            if (((cells.y >> 14) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 14);
+            if (((cells.y >> 15) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 15);
+            if (((cells.y >> 16) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 16);
+            if (((cells.y >> 17) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 17);
+            if (((cells.y >> 18) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 18);
+            if (((cells.y >> 19) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 19);
+            if (((cells.y >> 20) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 20);
+            if (((cells.y >> 21) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 21);
+            if (((cells.y >> 22) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 22);
+            if (((cells.y >> 23) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 23);
+            if (((cells.y >> 24) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 24);
+            if (((cells.y >> 25) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 25);
+            if (((cells.y >> 26) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 26);
+            if (((cells.y >> 27) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 27);
+            if (((cells.y >> 28) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 28);
+            if (((cells.y >> 29) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 29);
+            if (((cells.y >> 30) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 30);
+            if (((cells.y >> 31) & 1) == 1) GridCellDrawBuffer.Append(cellIndex + 31);
+        }
+        
+        //if (cells.x != 0)
+        //{
+        //    for (int i = 0; i < 32; i++)
+        //    {
+        //        if (((cells.x >> i) & 1) == 1)
+        //            GridCellDrawBuffer.Append(cellIndex + i);
+        //    }
+        //}
+    
+        //if (cells.y != 0)
+        //{
+        //    for (int j = 0; j < 32; j++)
+        //    {
+        //        if (((cells.y >> j) & 1) == 1)
+        //            GridCellDrawBuffer.Append(cellIndex + 32 + j);
+        //    }
+        //}
     //}
 }
+
+//[numthreads(8,8,1)]
+//void CSMain (uint3 id : SV_DispatchThreadID)
+//{
+//    int arrayIndex = id.y * (uint)ArrayElementWidth + id.x;
+    
+//    uint2 cells = GridCellDataBuffer[arrayIndex];
+    
+//    //uint x = id.x % (uint)ArrayElementWidth;
+//    //uint y = id.x / (uint)ArrayElementWidth;
+    
+//    uint cellIndex = arrayIndex * 64; //x * 64 + y * (ArrayElementWidth * 64);
+    
+//    float2 chunkMinimum = float2(id.x * 64 * CellSize, id.y * CellSize);
+//    float2 chunkMaximum = chunkMinimum + float2(64 * CellSize, CellSize);
+
+//    if (all(CameraBoundsMax >= chunkMinimum & CameraBoundsMin <= chunkMaximum))
+//    {
+//        for (int i = 0; i < 32; i++)
+//        {
+//            if (((cells.x >> i) & 1) == 1)
+//                GridCellDrawBuffer.Append(cellIndex + i);
+//        }
+    
+//        for (int j = 0; j < 32; j++)
+//        {
+//            if (((cells.y >> j) & 1) == 1)
+//                GridCellDrawBuffer.Append(cellIndex + 32 + j);
+//        }
+//    }
+//}

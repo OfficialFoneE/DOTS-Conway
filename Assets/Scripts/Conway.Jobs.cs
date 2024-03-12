@@ -29,8 +29,8 @@ public partial struct Conway
             int x = index % ArrayElementWidth;
             int y = index / ArrayElementWidth;
 
-            bool isLeft = x - 1 < ArrayElementWidth;
-            bool isRight = x + 1 >= 0;
+            bool isLeft = x - 1 >= 0;
+            bool isRight = x + 1 < ArrayElementWidth;
             bool isTop = y + 1 < ArrayElementHeight;
             bool isBottom = y - 1 >= 0;
 

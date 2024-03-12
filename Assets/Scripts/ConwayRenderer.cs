@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public struct ConwayRenderer : IDisposable
 {
@@ -54,6 +55,63 @@ public struct ConwayRenderer : IDisposable
         };
     }
 
+    public void Dispatch2(in Conway conway)
+    {
+        Profiler.BeginSample("GridCellDataBufferSet");
+        GridCellDataBuffer.SetData(conway.CurrentGrid);
+        GridCellDrawBuffer.SetCounterValue(0);
+        Profiler.EndSample();
+
+        Profiler.BeginSample("GridCellDataBufferSetParams");
+        ComputeShader.SetInt("ArrayElementWidth", conway.ArrayElementWidth);
+        ComputeShader.SetInt("ArrayElementHeight", conway.ArrayElementHeight);
+        ComputeShader.SetFloat("CellSize", 1.0f);
+
+        float2 cameraPosition = (Vector2)Camera.main.transform.position;
+        float2 cameraDimenions = new float2(Camera.main.orthographicSize * Camera.main.aspect, Camera.main.orthographicSize);
+        float2 cameraBoundsMin = cameraPosition - cameraDimenions;
+        float2 cameraBoundsMax = cameraPosition + cameraDimenions;
+        ComputeShader.SetFloats("CameraBoundsMin", cameraBoundsMin.x, cameraBoundsMin.y);
+        ComputeShader.SetFloats("CameraBoundsMax", cameraBoundsMax.x, cameraBoundsMax.y);
+
+        var kernel = ComputeShader.FindKernel("CSMain");
+        ComputeShader.SetBuffer(kernel, "GridCellDataBuffer", GridCellDataBuffer);
+        ComputeShader.SetBuffer(kernel, "GridCellDrawBuffer", GridCellDrawBuffer);
+        Profiler.EndSample();
+
+        // TODO: You should be able to speed things up by dispatching the compute shader on the x and y thread groups.. Not that it needs it.
+        //int threadGroups = (int)((Conway.ArrayElemetCount + (ComputeShaderThreadGroupSizes.x - 1)) / ComputeShaderThreadGroupSizes.x);
+        //ComputeShader.Dispatch(kernel, threadGroups, 1, 1);
+        Profiler.BeginSample("Dispatch");
+        ComputeShader.Dispatch(kernel, conway.ArrayElemetCount / 64, /*conway.ArrayElementHeight / 8*/1, 1);
+        Profiler.EndSample();
+    }
+
+    public void Draw2(in Conway conway)
+    {
+        GridCellMaterial.SetInteger("ArrayElementWidth", conway.ArrayElementWidth);
+        GridCellMaterial.SetInteger("ArrayElemetCount", conway.ArrayElemetCount);
+        GridCellMaterial.SetBuffer("GridCellDrawBuffer", GridCellDrawBuffer);
+
+        Profiler.BeginSample("Copy");
+        // Fetch the number of instances in the append buffer.
+        ComputeBuffer.CopyCount(GridCellDrawBuffer, GridCellDrawCount, 0);
+        var instanceCount = new uint[1];
+        GridCellDrawCount.GetData(instanceCount);
+        Profiler.EndSample();
+
+        // Update the number of instances to draw.
+        var indirectDrawIndexedArgs = IndirectDrawIndexedArgs[0];
+        indirectDrawIndexedArgs.instanceCount = instanceCount[0];
+        IndirectDrawIndexedArgs[0] = indirectDrawIndexedArgs;
+
+        // Update the new arguments on the GPU.
+        IndirectArgsCommandBuffer.SetData(IndirectDrawIndexedArgs);
+
+        // Dispatch the draw mesh indirect.
+        Graphics.RenderMeshIndirect(RenderParams, GridCellMesh, IndirectArgsCommandBuffer);
+    }
+
     private void DrawUpdate(in Conway conway)
     {
         GridCellDataBuffer.SetData(conway.CurrentGrid);
@@ -61,6 +119,15 @@ public struct ConwayRenderer : IDisposable
 
         ComputeShader.SetInt("ArrayElementWidth", conway.ArrayElementWidth);
         ComputeShader.SetInt("ArrayElementHeight", conway.ArrayElementHeight);
+
+        ComputeShader.SetFloat("CellSize", 1.0f);
+
+        float2 cameraPosition = (Vector2)Camera.main.transform.position;
+        float2 cameraDimenions = new float2(Camera.main.orthographicSize * Camera.main.aspect, Camera.main.orthographicSize);
+        float2 cameraBoundsMin = cameraPosition - cameraDimenions;
+        float2 cameraBoundsMax = cameraPosition + cameraDimenions;
+        ComputeShader.SetFloats("CameraBoundsMin", cameraBoundsMin.x, cameraBoundsMin.y);
+        ComputeShader.SetFloats("CameraBoundsMax", cameraBoundsMax.x, cameraBoundsMax.y);
 
         var kernel = ComputeShader.FindKernel("CSMain");
         ComputeShader.SetBuffer(kernel, "GridCellDataBuffer", GridCellDataBuffer);
@@ -74,7 +141,7 @@ public struct ConwayRenderer : IDisposable
         //int threadGroups = (int)((Conway.ArrayElemetCount + (ComputeShaderThreadGroupSizes.x - 1)) / ComputeShaderThreadGroupSizes.x);
         //ComputeShader.Dispatch(kernel, threadGroups, 1, 1);
 
-        ComputeShader.Dispatch(kernel, conway.ArrayElemetCount / 64, 1, 1);
+        ComputeShader.Dispatch(kernel, conway.ArrayElemetCount / 64, /*conway.ArrayElementHeight / 8*/1, 1);
     }
 
     public void Draw(in Conway conway)
