@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Unity.Burst;
+using Unity.Burst.CompilerServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -51,18 +52,18 @@ public partial struct Conway
                 neighborCounts[0] += GetBitValue(baseCells, 1);
 
                 // If there are cells to the left of this chunk.
-                if (isLeft)
+                if (Hint.Likely(isLeft))
                 {
                     neighborCounts[0] += GetBitValue(BaseGrid[leftIndex], 63);
 
                     // If there are cells to the bottom left of this chunk
-                    if (isBottom)
+                    if (Hint.Likely(isBottom))
                     {
                         neighborCounts[0] += GetBitValue(BaseGrid[leftBottomIndex], 63);
                     }
 
                     // If there are cells to the top left of this chunk
-                    if (isTop)
+                    if (Hint.Likely(isTop))
                     {
                         neighborCounts[0] += GetBitValue(BaseGrid[leftTopIndex], 63);
                     }
@@ -71,18 +72,18 @@ public partial struct Conway
                 neighborCounts[63] += GetBitValue(baseCells, 62);
 
                 // If there are cells to the right of this chunk.
-                if (isRight)
+                if (Hint.Likely(isRight))
                 {
                     neighborCounts[63] += GetBitValue(BaseGrid[rightIndex], 0);
 
                     // If there are cells to the bottom right of this chunk
-                    if (isBottom)
+                    if (Hint.Likely(isBottom))
                     {
                         neighborCounts[63] += GetBitValue(BaseGrid[rightBottomIndex], 0);
                     }
 
                     // If there are cells to the top right of this chunk
-                    if (isTop)
+                    if (Hint.Likely(isTop))
                     {
                         neighborCounts[63] += GetBitValue(BaseGrid[rightTopIndex], 0);
                     }
@@ -103,7 +104,7 @@ public partial struct Conway
                     }
                 }
 
-                if (isTop)
+                if (Hint.Likely(isTop))
                 {
                     ulong top = BaseGrid[topIndex];
 
@@ -124,7 +125,7 @@ public partial struct Conway
                     }
                 }
 
-                if (isBottom)
+                if (Hint.Likely(isBottom))
                 {
                     ulong bottom = BaseGrid[bottomIndex];
 
