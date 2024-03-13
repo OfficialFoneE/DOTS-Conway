@@ -9,6 +9,7 @@ public struct ConwayRenderer : IDisposable
 {
     private const string GridCellMaterialPath = "Materials/GridCellMaterial";
     private const string CreateDrawCommandsComputeShaderPath = "Shaders/CreateDrawCommands";
+    private const string CreateDrawCommandsComputeShaderPath2 = "Shaders/CreateDrawCommandsSquare";
 
     private Mesh GridCellMesh;
     private Material GridCellMaterial;
@@ -26,8 +27,23 @@ public struct ConwayRenderer : IDisposable
     private GraphicsBuffer IndirectArgsCommandBuffer;
     private NativeArray<GraphicsBuffer.IndirectDrawIndexedArgs> IndirectDrawIndexedArgs;
 
+    private RenderTexture texture;
+    private ComputeShader ComputeShader2;
+
     public ConwayRenderer(in Conway conway)
     {
+        texture = new RenderTexture(conway.GridSize, conway.GridSize, 0, RenderTextureFormat.R8);
+        texture.enableRandomWrite = true;
+        texture.filterMode = FilterMode.Point;
+        texture.Create();
+
+        ComputeShader2 = Resources.Load<ComputeShader>(CreateDrawCommandsComputeShaderPath);
+
+
+
+
+
+
         GridCellMesh = MeshUtility.Quad();
         GridCellMaterial = Resources.Load<Material>(GridCellMaterialPath);
 
@@ -176,6 +192,9 @@ public struct ConwayRenderer : IDisposable
         GridCellDrawBuffer = null;
         GridCellDrawCount = null;
         IndirectArgsCommandBuffer = null;
+
+        texture?.Release();
+        texture = null;
 
         if (IndirectDrawIndexedArgs.IsCreated) IndirectDrawIndexedArgs.Dispose();
     }
