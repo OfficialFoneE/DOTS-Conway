@@ -12,7 +12,7 @@ public class Runner : MonoBehaviour
         Application.targetFrameRate = -1;
 
         Conway = new Conway(Resolution, Unity.Collections.Allocator.Persistent);
-        ConwayRenderer = new ConwayRenderer(Conway);
+        //ConwayRenderer = new ConwayRenderer(Conway);
         ConwayRenderer2 = new ConwayRenderer2(Conway);
 
         UnityEngine.Debug.Log(Conway.ToString());
@@ -23,8 +23,8 @@ public class Runner : MonoBehaviour
         //ConwayRenderer.Draw2(Conway);
         //ConwayRenderer.Dispatch2(Conway);
         ConwayRenderer2.Dispatch2(Conway);
-
         Conway.Update();
+        ConwayRenderer2.Draw(Conway);
     }
 
     private void LateUpdate()
@@ -45,7 +45,7 @@ public class Runner : MonoBehaviour
     private void OnDestroy()
     {
         Conway.Dispose();
-        ConwayRenderer.Dispose();
+        //ConwayRenderer.Dispose();
         ConwayRenderer2.Dispose();
     }
 }

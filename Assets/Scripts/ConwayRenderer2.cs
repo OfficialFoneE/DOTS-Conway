@@ -29,6 +29,7 @@ public struct ConwayRenderer2 : IDisposable
         GridCellDrawTexture.Create();
 
         GridCellMesh = MeshUtility.Quad();
+        GridCellMesh.bounds = new Bounds(Vector3.zero, Vector3.one * conway.GridSize);
         GridCellMaterial = Resources.Load<Material>(GridCellMaterialPath);
         GridCellMaterial.mainTexture = GridCellDrawTexture;
 
@@ -63,18 +64,18 @@ public struct ConwayRenderer2 : IDisposable
         Profiler.EndSample();
 
         // TODO: You should be able to speed things up by dispatching the compute shader on the x and y thread groups.. Not that it needs it.
-        //int threadGroups = (int)((Conway.ArrayElemetCount + (ComputeShaderThreadGroupSizes.x - 1)) / ComputeShaderThreadGroupSizes.x);
+        //int threadGroups = (int)((conway.ArrayElemetCount + (ComputeShaderThreadGroupSizes.x - 1)) / ComputeShaderThreadGroupSizes.x);
         //ComputeShader.Dispatch(kernel, threadGroups, 1, 1);
         Profiler.BeginSample("Dispatch");
-        ComputeShader.Dispatch(kernel, conway.ArrayElemetCount / 64, /*conway.ArrayElementHeight / 8*/1, 1);
+        ComputeShader.Dispatch(kernel, conway.ArrayElemetCount / 64/* / 4*/, /*conway.ArrayElementHeight / 8*/1, 1);
         Profiler.EndSample();
     }
 
     public void Draw(in Conway conway)
     {
-        var matrix = Matrix4x4.TRS(Vector3.zero, quaternion.identity, new Vector3(1000, 1000));
+        GridCellMaterial.SetFloat("GridSize", conway.GridSize);
 
-        Graphics.DrawMesh(GridCellMesh, matrix, GridCellMaterial, 0);
+        Graphics.DrawMesh(GridCellMesh, Vector3.zero, quaternion.identity, GridCellMaterial, 0);
 
         //GridCellMaterial.SetInteger("ArrayElementWidth", conway.ArrayElementWidth);
         //GridCellMaterial.SetInteger("ArrayElemetCount", conway.ArrayElemetCount);
