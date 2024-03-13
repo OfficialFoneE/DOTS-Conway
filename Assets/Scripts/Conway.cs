@@ -4,6 +4,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using System;
 using System.Text;
+using UnityEngine;
 
 //Standard Rules of Conway's Game of Life:
 
@@ -46,8 +47,12 @@ public partial struct Conway : IDisposable
         GridSize = (int)math.floor(math.pow(2, resolution) * 64);
         GridCellCount = GridSize * GridSize;
 
-        ArrayElementWidth = GridSize / 64;
-        ArrayElementHeight = GridSize;
+        //ArrayElementWidth = GridSize / 64;
+        //ArrayElementHeight = GridSize;
+        //ArrayElemetCount = ArrayElementWidth * ArrayElementHeight;
+
+        ArrayElementWidth = GridSize / 8;
+        ArrayElementHeight = GridSize / 8;
         ArrayElemetCount = ArrayElementWidth * ArrayElementHeight;
 
         Iteration = 0;
@@ -71,7 +76,7 @@ public partial struct Conway : IDisposable
 
     public void Update()
     {
-        var UpdateGridJobBatch = new UpdateGridJobBatch
+        var UpdateGridJobBatch = new UpdateGridJobBatchSquare
         {
             ArrayElementWidth = ArrayElementWidth,
             ArrayElementHeight = ArrayElementHeight,
@@ -124,66 +129,6 @@ public partial struct Conway : IDisposable
         }
 
         return stringBuilder.ToString();
-    }
-
-    public void DrawPreviousGrid()
-    {
-        var previousGrid = PreviousGrid;
-
-        if (previousGrid.IsCreated == false)
-            return;
-
-        UnityEngine.Gizmos.color = UnityEngine.Color.white;
-
-        for (int y = 0; y < ArrayElementHeight; y++)
-        {
-            for (int x = 0; x < ArrayElementWidth; x++)
-            {
-                int index = y * ArrayElementWidth + x;
-
-                var baseCells = previousGrid[index];
-
-                for (int i = 0; i < 64; i++)
-                {
-                    bool isAlive = ((baseCells >> i) & 1) == 1;
-
-                    if(isAlive)
-                    {
-                        UnityEngine.Gizmos.DrawWireCube(new UnityEngine.Vector3(x * 64 + i, y, 0), new UnityEngine.Vector3(0.75f, 0.75f, 0.75f));
-                    }
-                }
-            }
-        }
-    }
-
-    public void DrawCurrentGrid()
-    {
-        var currentGrid = CurrentGrid;
-
-        if (currentGrid.IsCreated == false)
-            return;
-
-        UnityEngine.Gizmos.color = UnityEngine.Color.red;
-
-        for (int y = 0; y < ArrayElementHeight; y++)
-        {
-            for (int x = 0; x < ArrayElementWidth; x++)
-            {
-                int index = y * ArrayElementWidth + x;
-
-                var baseCells = currentGrid[index];
-
-                for (int i = 0; i < 64; i++)
-                {
-                    bool isAlive = ((baseCells >> i) & 1) == 1;
-
-                    if (isAlive)
-                    {
-                        UnityEngine.Gizmos.DrawWireCube(new UnityEngine.Vector3(x * 64 + i, y, 0), UnityEngine.Vector3.one);
-                    }
-                }
-            }
-        }
     }
 
     public int GetNumberOfAliveCells()

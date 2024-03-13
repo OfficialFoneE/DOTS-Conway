@@ -19,8 +19,8 @@ public class Runner : MonoBehaviour
 
     void Update()
     {
-        ConwayRenderer.Draw2(Conway);
-        ConwayRenderer.Dispatch2(Conway);
+        //ConwayRenderer.Draw2(Conway);
+        //ConwayRenderer.Dispatch2(Conway);
         Conway.Update();
     }
 
@@ -31,20 +31,9 @@ public class Runner : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        //Conway.DrawPreviousGrid();
-        //Conway.DrawCurrentGrid();
-
-        //for (int i = 0; i < Conway.ArrayElementWidth; i++)
-        //{
-        //    for (int j = 0; j < Conway.ArrayElementHeight; j++)
-        //    {
-        //        var startingX = i * 64;
-        //        var startingY = j;
-
-
-        //        Gizmos.DrawWireCube(new Vector3(startingX + 32 - 0.5f, startingY), new Vector3(64, 1.0f));
-        //    }
-        //}
+        //Conway.DrawPreviousGridSquare();
+        //Conway.DrawCurrentGridSquare();
+        //Conway.DrawGridBoundriesSquare();
     }
 
     private void OnDestroy()
