@@ -5,34 +5,27 @@ public class Runner : MonoBehaviour
     public int Resolution = 2;
 
     private Conway Conway;
-    private ConwayRenderer ConwayRenderer;
-    public ConwayRenderer2 ConwayRenderer2;
+    public ConwayRenderer ConwayRenderer;
     void Start()
     {
         Application.targetFrameRate = -1;
 
         Conway = new Conway(Resolution, Unity.Collections.Allocator.Persistent);
-        //ConwayRenderer = new ConwayRenderer(Conway);
-        ConwayRenderer2 = new ConwayRenderer2(Conway);
+        ConwayRenderer = new ConwayRenderer(Conway);
 
         UnityEngine.Debug.Log(Conway.ToString());
     }
 
     void Update()
     {
-        //ConwayRenderer.Draw2(Conway);
-        //ConwayRenderer.Dispatch2(Conway);
-        ConwayRenderer2.Dispatch2(Conway);
+        ConwayRenderer.Dispatch(Conway);
         Conway.Update();
-        ConwayRenderer2.Draw(Conway);
+        ConwayRenderer.Draw(Conway);
     }
 
     private void LateUpdate()
     {
-        //ConwayRenderer.Draw(Conway);
-        //ConwayRenderer2.Dispatch2(Conway);
-
-        //ConwayRenderer2.Draw(Conway);
+        ConwayRenderer.Draw(Conway);
     }
 
     private void OnDrawGizmosSelected()
@@ -45,7 +38,6 @@ public class Runner : MonoBehaviour
     private void OnDestroy()
     {
         Conway.Dispose();
-        //ConwayRenderer.Dispose();
-        ConwayRenderer2.Dispose();
+        ConwayRenderer.Dispose();
     }
 }

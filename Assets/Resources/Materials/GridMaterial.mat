@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: GridCellMaterialSquare
+  m_Name: GridMaterial
   m_Shader: {fileID: 4800000, guid: ae351e8de7b368349b908aab1e9bf6af, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0

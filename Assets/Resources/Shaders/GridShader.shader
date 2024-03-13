@@ -1,4 +1,4 @@
-Shader "Unlit/GridCellSquare"
+Shader "Unlit/GridShader"
 {
     Properties
     {
